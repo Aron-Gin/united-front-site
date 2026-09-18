@@ -142,8 +142,11 @@ def main():
 
     print("Buscando kill statistics...")
     kill_html = fetch(f"{BASE}/index.php/killstatistics")
-    new_deaths = parse_killstatistics(kill_html)
-    print(f"  {len(new_deaths)} mortes na pagina atual")
+    all_deaths = parse_killstatistics(kill_html)
+    # So mortes de membros da guild -- o killstatistics e do servidor
+    # inteiro, sem esse filtro o "Top Mortes" mistura todo mundo.
+    new_deaths = [d for d in all_deaths if d["name"] in members]
+    print(f"  {len(all_deaths)} mortes na pagina atual, {len(new_deaths)} de membros da guild")
 
     # Monta as rows do snapshot: todo membro da guild, cruzando com highscores
     # quando disponivel (pct preciso); senao so o level (pct fica None).
