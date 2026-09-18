@@ -20,6 +20,7 @@ from datetime import datetime
 
 BASE = "https://holiday.servegame.com"
 GUILD_NAME = "PVP COVARDE"
+KILLER_GUILD_NAME = "United Front"  # ranking de "quem mais matou" e restrito a essa guild
 HIGHSCORE_PAGES = 10  # cobre ate rank ~1000; da conta dos membros de level mais alto
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
 HISTORY_HOURS = 48  # quanto de snapshot/mortes manter no arquivo
@@ -99,23 +100,27 @@ def parse_kill_timestamp(text):
 def parse_killstatistics(html):
     deaths = []
     for m in re.finditer(
-        r'<td width="110"[^>]*>\s*<small>\s*([\d.:, ]+?)\s*</small>\s*</td>\s*<td valign="top">\s*<a[^>]*>\s*<b>\s*([^<]+?)\s*</b>\s*</a>\s*(has slain by|has died by)',
+        r'<td width="110"[^>]*>\s*<small>\s*([\d.:, ]+?)\s*</small>\s*</td>\s*<td valign="top">\s*<a[^>]*>\s*<b>\s*([^<]+?)\s*</b>\s*</a>\s*(has slain by|has died by)(.*?)</td>',
         html, re.S):
-        ts_text, victim, cause = m.groups()
+        ts_text, victim, cause, rest = m.groups()
         ts = parse_kill_timestamp(ts_text)
         if ts is None:
             continue
-        deaths.append({"name": clean(victim), "seenAt": ts, "pvp": cause.strip() == "has slain by"})
+        is_pvp = cause.strip() == "has slain by"
+        killers = [clean(k) for k in re.findall(r"<b>\s*([^<]+?)\s*</b>", rest)] if is_pvp else []
+        deaths.append({"name": clean(victim), "seenAt": ts, "pvp": is_pvp, "killers": killers})
     return deaths
 
 def load_existing():
     if os.path.exists(DATA_PATH):
         try:
             with open(DATA_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                data.setdefault("killCounts", {})
+                return data
         except Exception:
             pass
-    return {"snapshots": [], "deaths": []}
+    return {"snapshots": [], "deaths": [], "killCounts": {}}
 
 def prune(data, now_ms):
     cutoff = now_ms - HISTORY_HOURS * 3600 * 1000
@@ -139,6 +144,11 @@ def main():
     payhunt_html = fetch(f"{BASE}/index.php/payhunt")
     payhunt_names = parse_payhunt_names(payhunt_html)
     print(f"  {len(payhunt_names)} na payhunt/extra")
+
+    print("Buscando membros da guild United Front (ranking de quem mais matou)...")
+    uf_html = fetch(f"{BASE}/?subtopic=guilds&action=show&guild=" + KILLER_GUILD_NAME.replace(" ", "+"))
+    uf_members = parse_guild_members(uf_html)
+    print(f"  {len(uf_members)} membros da United Front encontrados")
 
     print("Buscando kill statistics...")
     kill_html = fetch(f"{BASE}/index.php/killstatistics")
@@ -170,6 +180,32 @@ def main():
             existing_keys.add(key)
             added += 1
     print(f"  {added} mortes novas adicionadas (dedup por nome+timestamp)")
+
+    # Ranking "quem mais matou" (United Front): cumulativo, nunca e podado
+    # junto com snapshots/deaths -- por isso usa um set de dedup PROPRIO
+    # (independente do filtro por vitima da guild usado no Top Mortes), ja
+    # que aqui o que importa e o MATADOR, nao a vitima.
+    counted_kill_keys = set(data.get("countedKillKeys", []))
+    new_kill_keys = []
+    kills_credited = 0
+    for d in all_deaths:
+        if not d.get("pvp") or not d.get("killers"):
+            continue
+        key = f"{d['name']}|{d['seenAt']}"
+        if key in counted_kill_keys:
+            continue
+        counted_kill_keys.add(key)
+        new_kill_keys.append(key)
+        for killer in d["killers"]:
+            if killer in uf_members:
+                data["killCounts"][killer] = data["killCounts"].get(killer, 0) + 1
+                kills_credited += 1
+    # capa o set de dedup pra nao crescer sem limite (a pagina de
+    # killstatistics so mostra uma janela recente, entao isso e mais que
+    # suficiente pra nunca contar o mesmo evento duas vezes)
+    all_kill_keys = list(data.get("countedKillKeys", [])) + new_kill_keys
+    data["countedKillKeys"] = all_kill_keys[-2000:]
+    print(f"  {kills_credited} abates creditados a membros da United Front (ranking cumulativo)")
 
     data = prune(data, now_ms)
 
