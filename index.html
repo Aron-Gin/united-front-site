@@ -957,15 +957,16 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
     killCounts = d.killCounts || {};
     renderAll();
   }).catch(function(err){
+    // So cai aqui se o fetch de verdade falhar (rede, 404, etc.) -- nesse
+    // caso sim usa o fallback embutido. Nao faz nenhum render ANTES do
+    // fetch terminar (sucesso ou falha): evita a tela mostrar uma lista
+    // (do fallback, que pode estar bem desatualizado) e ela sumir logo em
+    // seguida quando os dados ao vivo (ainda com pouco historico) chegam.
     console.warn("Falha ao buscar data.json, usando dados embutidos:", err);
     loadEmbeddedFallback();
+  }).then(function(){
     renderAll();
   });
-
-  // Primeiro render imediato com o fallback (se existir), pra pagina nao
-  // ficar em branco enquanto o fetch acima ainda esta em andamento.
-  loadEmbeddedFallback();
-  renderAll();
 })();
 </script>
 
