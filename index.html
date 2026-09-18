@@ -271,6 +271,16 @@
 </div>
 
 <div class="card">
+  <h2>&#9876;&#65039; Top Matadores &mdash; United Front</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th class="rankcell">#</th><th>Nome</th><th class="num">Abates</th></tr></thead>
+      <tbody id="killerBody"><tr><td colspan="3" class="empty">Carregando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
   <h2>&#128200; Maiores ganhos <span class="chip" id="gainPeriodLabel"></span></h2>
   <div class="row pill-btns" id="periodPills"></div>
   <div class="tablewrap">
@@ -395,6 +405,7 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
 
   var snapshots = []; // sorted ascending by t: {t, rows:[[rank,name,level,pct],...]}
   var deaths = []; // [{name, key, seenAt}]
+  var killCounts = {}; // {nome: abates} -- cumulativo, so membros da guild United Front
   var chart = null;
   var selectedChars = [];
   var charSearchTerm = "";
@@ -885,6 +896,17 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
   }
   function escapeAttr(s){ return escapeHtml(s); }
 
+  function renderKillers(){
+    var body = document.getElementById("killerBody");
+    if (!body) return;
+    var list = Object.keys(killCounts).map(function(name){ return {name: name, count: killCounts[name]}; });
+    list.sort(function(a,b){ return b.count - a.count || a.name.localeCompare(b.name); });
+    list = list.slice(0, 20);
+    body.innerHTML = list.length ? list.map(function(x, i){
+      return "<tr><td class='rankcell'>" + (i+1) + "</td><td>" + escapeHtml(x.name) + "</td><td class='num'>" + x.count + "</td></tr>";
+    }).join("") : "<tr><td colspan='3' class='empty'>Sem abates registrados ainda.</td></tr>";
+  }
+
   function renderAll(){
     renderPeriodPills();
     renderStatus();
@@ -894,6 +916,7 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
     renderDeathsTable();
     renderGainers();
     renderTop10();
+    renderKillers();
     renderCharPicker();
     renderChart();
   }
@@ -931,6 +954,7 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
     list.sort(function(a,b){ return a.t - b.t; });
     snapshots = list;
     deaths = (d.deaths || []).slice();
+    killCounts = d.killCounts || {};
     renderAll();
   }).catch(function(err){
     console.warn("Falha ao buscar data.json, usando dados embutidos:", err);
