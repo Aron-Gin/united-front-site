@@ -179,7 +179,7 @@
   .stat-card{
     background:linear-gradient(180deg, rgba(255,255,255,.02), transparent 40%), linear-gradient(180deg, var(--card), var(--card-2));
     border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow); position:relative;
-    display:flex; flex-direction:column; overflow:hidden;
+    display:flex; flex-direction:column; overflow:hidden; height:320px;
     transition: transform .25s, box-shadow .25s, border-color .25s;
   }
   .stat-card:hover{ transform:translateY(-3px); border-color:var(--border-hi); box-shadow: var(--shadow), 0 0 24px rgba(232,200,116,.16); }
@@ -197,7 +197,7 @@
     color:var(--gold); margin:0 0 4px; display:flex; align-items:center; gap:6px;
   }
   .stat-card .stat-sub{font-size:10.5px; color:var(--muted); margin-bottom:10px; line-height:1.4;}
-  .stat-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; flex:1;}
+  .stat-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto;}
   .stat-row{
     display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid rgba(90,69,34,.35);
     font-size:12.5px; transition:background .15s;
