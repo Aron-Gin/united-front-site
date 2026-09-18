@@ -905,10 +905,9 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
 
   setInterval(renderStatus, 30000);
 
-  // Os dados ficam embutidos na própria página (SNAPSHOTS_DATA, gerado no
-  // momento da publicação) -- página 100% estática, compartilhável por link
-  // com qualquer pessoa, sem depender de capability nenhuma.
-  (function loadEmbedded(){
+  // Fallback (so usado se o fetch abaixo falhar por algum motivo): dados
+  // embutidos na propria pagina no momento da publicacao.
+  function loadEmbeddedFallback(){
     try{
       var list = (window.SNAPSHOTS_DATA || []).map(function(s){ return {t: s.t, rows: s.rows}; });
       list.sort(function(a,b){ return a.t - b.t; });
@@ -917,8 +916,31 @@ window.DEATHS_DATA = [{"name":"Immortal Empire","key":"16.09.2026, 01:34:00","se
     try{
       deaths = (window.DEATHS_DATA || []).slice();
     } catch(e){ deaths = []; }
-  })();
+  }
 
+  // Dados ao vivo: um workflow agendado (GitHub Actions) busca o highscores/
+  // guild/payhunt/kill statistics do jogo periodicamente e commita esse
+  // arquivo no mesmo repositorio -- a pagina so precisa buscar ele. Assim o
+  // dashboard atualiza sozinho sem precisar republicar o index.html a cada
+  // captura nova (só quando mudar alguma funcionalidade do site em si).
+  fetch("./data.json", {cache: "no-store"}).then(function(r){
+    if (!r.ok) throw new Error("http " + r.status);
+    return r.json();
+  }).then(function(d){
+    var list = (d.snapshots || []).slice();
+    list.sort(function(a,b){ return a.t - b.t; });
+    snapshots = list;
+    deaths = (d.deaths || []).slice();
+    renderAll();
+  }).catch(function(err){
+    console.warn("Falha ao buscar data.json, usando dados embutidos:", err);
+    loadEmbeddedFallback();
+    renderAll();
+  });
+
+  // Primeiro render imediato com o fallback (se existir), pra pagina nao
+  // ficar em branco enquanto o fetch acima ainda esta em andamento.
+  loadEmbeddedFallback();
   renderAll();
 })();
 </script>
