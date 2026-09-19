@@ -1,4 +1,15 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+  .bg-watermark{
+    position:fixed; inset:0; z-index:-1;
+    background-image:url('logo-arongin.png');
+    background-position:center 22%;
+    background-repeat:no-repeat;
+    background-size:min(1400px, 120vw);
+    opacity:.08;
+    filter:saturate(1.3);
+    pointer-events:none;
+  }
+</style></head><body>
 <title>United Front</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -8,7 +19,7 @@
     /* paleta "grimorio" -- pergaminho escuro, bronze e ouro, brasas e mana */
     --bg-0:#0b0906; --bg-1:#15100a; --bg-2:#1d160e;
     --parchment:#e9dcbd;
-    --card:#1a140c; --card-2:#211809;
+    --card:rgba(26,20,12,.82); --card-2:rgba(33,24,9,.82);
     --text:#ecdfc4; --muted:#a9987a; --muted-2:#7c6d54;
     --border:#5a4522; --border-hi:#c9a44c;
     --gold:#e8c874; --gold-deep:#b98a2e;
@@ -240,6 +251,7 @@
   .char-block .cb-flag{font-size:10px; color:var(--muted); margin-top:6px; font-style:italic;}
 </style>
 
+<div class="bg-watermark"></div>
 <div class="hero">
   <div id="guildBg"></div>
   <h1><span class="torch">&#9876;&#65039;</span> United Front <span class="crest" title="Online"></span></h1>
